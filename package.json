@@ -1,0 +1,25 @@
+{
+  "name": "lois",
+  "version": "1.0.0",
+  "description": "AI Content Research Tool - Reddit sentiment analysis",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "discover": "tsx src/discover-reddit.ts",
+    "discover:google": "tsx src/discover-google.ts",
+    "scrape": "tsx src/scrape.ts",
+    "filter-clean": "tsx src/filter-clean-dataset.ts",
+    "analyze": "tsx src/analyze.ts",
+    "dashboard": "cd dashboard && npm run dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.65.0",
+    "dotenv": "^16.4.5",
+    "snoowrap": "^1.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
