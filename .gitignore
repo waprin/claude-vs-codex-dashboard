@@ -5,3 +5,4 @@ dist/
 !package.json
 !tsconfig.json
 logs/
+NOTES.md

@@ -1,11 +1,24 @@
-# Lois & Clark: Reddit Sentiment Analysis Tool
+# Lois & Clark: Technical Documentation
 
-## Project Goal
-Build a sentiment analysis tool to compare Claude Code vs Codex using Reddit discussions.
+This document contains detailed architectural decisions, design rationale, and implementation notes for contributors and maintainers.
+
+For user documentation, see [README.md](README.md).
 
 ---
 
-## Discovery Approach Evolution
+## Project Overview
+
+A sentiment analysis pipeline that:
+1. Discovers Reddit posts comparing AI coding tools
+2. Scrapes complete discussion threads
+3. Analyzes sentiment using Claude AI
+4. Presents results in an interactive dashboard
+
+This tool can be adapted to analyze any comparative discussions across different platforms.
+
+---
+
+## Design Decisions: Discovery Approach Evolution
 
 ### Attempt 1: Subreddit Hot Posts (Initial)
 **Approach:** Use Reddit API to fetch hot posts from multiple subreddits
@@ -78,62 +91,55 @@ Results we can get: 100 (0.17% coverage!)
 
 ---
 
-### Attempt 4: Direct Reddit API with Client-Side Filtering (Current)
+### Attempt 4: Direct Reddit API with Client-Side Filtering (Current Implementation)
 
-**The realization:**
-- Reddit API is **FREE** for our use case (60 req/min)
-- No 100-result artificial cap
+**Key advantages:**
+- Reddit API is free (60 req/min rate limit)
+- No artificial result caps (unlike search APIs)
 - Can paginate through entire subreddits
 - Client-side filtering is 100% reliable (no search algorithm quirks)
 
-**Subreddit selection strategy:**
+**Subreddit Selection Strategy:**
 
-Initial list (12 subreddits):
-- ClaudeAI, Cursor, ChatGPTCoding, Anthropic, OpenAI, LLMDevs, vibecoding, codex, mcp, AI_Agents, OpenaiCodex, VibeCodeDevs
+Initial consideration: 12 general AI subreddits (ClaudeAI, Cursor, ChatGPTCoding, Anthropic, OpenAI, LLMDevs, vibecoding, codex, mcp, AI_Agents, OpenaiCodex, VibeCodeDevs)
 
-**Problem with broad approach:**
-- /r/ClaudeAI: 11k posts/week (lots of coding + non-coding)
-- /r/OpenAI: 104k posts/week (mostly non-coding)
-- /r/Anthropic: Mix of research + coding
-- Fetching all = 150k+ posts = high noise
+**Challenge with broad approach:**
+- Large subreddits generate 10k-100k+ posts/week
+- Mix of technical and non-technical content
+- High noise-to-signal ratio
 
-**Refined approach - Coding-focused subreddits:**
+**Implemented approach:**
 Focus on 3 coding-specific subreddits:
-- **/r/ClaudeCode**: 4.6k posts/week (Claude Code specific)
-- **/r/codex**: 1.2k posts/week (Codex specific)
-- **/r/ChatGPTCoding**: 1.7k posts/week (coding-focused)
+- **/r/ClaudeCode**: Claude Code specific discussions
+- **/r/codex**: Codex specific discussions
+- **/r/ChatGPTCoding**: General AI coding discussions
 
-**Total volume:**
-- 7.5k posts/week × 10 weeks (2.5 months) = **75,000 posts**
-- At 100 posts/API call = **750 API calls**
-- At 60 req/min = **~13 minutes runtime**
-- Filter client-side for posts containing both "claude code" AND "codex"
+**Performance characteristics:**
+- ~75,000 posts scanned over 2.5 month window
+- ~750 API calls at 100 posts/call
+- ~13 minutes runtime at 60 req/min
+- Client-side filtering for posts containing both comparison terms
 
-**Realistic volume estimates:**
-- Scanning: 75,000 posts from 3 subreddits
-- Expected matches: Unknown, but Google shows 58,800+ results exist across all of Reddit
-- Conservative estimate: 1,000-5,000 matching posts in our 3 coding-focused subreddits
+**Volume estimates:**
+- Total posts scanned: ~75,000
+- Expected comparative posts: 1,000-5,000
 - Comments per post: 20-100 average
-- **Total comments to analyze: 20,000-500,000**
+- Total comments to analyze: 20,000-500,000
 
 **Cost analysis:**
-- Reddit API: **$0/month** (free tier handles this easily)
-- LLM sentiment analysis:
-  - Conservative: 1,000 posts × 50 comments = 50k comments
-  - Realistic: 2,000-3,000 posts × 50 comments = 100k-150k comments
-  - Claude Haiku (~$0.25 per 1M input tokens, ~200 tokens per comment):
-    - 50k comments = ~$2.50 per run
-    - 150k comments = ~$7.50 per run
-  - Weekly runs: **~$10-30/month**
-- **Total: Well under $50/month budget**
+- Reddit API: Free (within rate limits)
+- LLM sentiment analysis with Claude Haiku (~$0.25 per 1M input tokens):
+  - 50k comments: ~$2.50 per run
+  - 150k comments: ~$7.50 per run
+  - Typical usage: ~$10-30/month
 
-**Why this approach wins:**
-1. **Comprehensive**: Gets every post from target subreddits
-2. **Reliable**: Client-side filtering never misses matches
-3. **Cost-effective**: Free scraping, cheap LLM analysis
-4. **Fast**: ~15 minutes to discover all URLs
-5. **Coding-focused**: Low noise, high signal
-6. **Scalable**: Easy to add more subreddits later
+**Why this approach:**
+1. **Comprehensive**: Captures all posts from target subreddits
+2. **Reliable**: No missed results from search algorithms
+3. **Cost-effective**: Free discovery, affordable analysis
+4. **Fast**: Minutes to discover, not hours
+5. **Focused**: High signal-to-noise ratio
+6. **Scalable**: Easy to add more subreddits or adjust timeframes
 
 ---
 
@@ -284,30 +290,122 @@ src/analyze.ts
 
 ---
 
-## Future Enhancements
+## Extending the System
 
-### Multi-platform expansion
-- Hacker News (YCombinator)
-- Dev.to
-- LinkedIn posts
-- Twitter/X threads
-- GitHub discussions
+### Adding New Platforms
 
-### Advanced filtering
-- Sentiment scoring per comment
-- Topic clustering (bugs, features, comparisons)
-- Time-series sentiment tracking
-- User engagement metrics (power users, new users)
+The architecture is designed to support multiple discussion platforms. To add a new platform:
 
-### Automation
-- Daily/weekly scheduled runs
-- Email digest of top insights
-- Slack/Discord notifications for significant sentiment shifts
+1. **Create discovery module** (`src/discover-[platform].ts`):
+   - Fetch posts/threads from platform API
+   - Filter for comparison keywords
+   - Output to `discovered_urls.jsonl`
+
+2. **Create scraper module** (`src/scrape-[platform].ts`):
+   - Read discovered URLs
+   - Fetch full content + comments
+   - Normalize to common format
+   - Output to `reddit_data.jsonl` (or platform-specific file)
+
+3. **Update analysis** (`src/analyze.ts`):
+   - Ensure prompt handles platform-specific formatting
+   - Add platform field to output schema
+
+**Potential platforms:**
+- Hacker News (YCombinator API)
+- Dev.to (REST API)
+- Twitter/X (API v2)
+- GitHub Discussions (GraphQL API)
+- Stack Overflow (REST API)
+
+### Adding New Comparison Topics
+
+To compare different tools (e.g., Cursor vs Windsurf):
+
+1. **Update discovery keywords** in `src/discover-reddit.ts`:
+   ```typescript
+   const KEYWORDS = {
+     tool1: 'cursor',
+     tool2: 'windsurf'
+   };
+   ```
+
+2. **Update analysis prompt** in `src/analyze.ts`:
+   - Modify comparison categories
+   - Adjust sentiment classification
+
+3. **Update dashboard** in `dashboard/app/page.tsx`:
+   - Update UI labels
+   - Adjust color schemes if needed
+
+### Advanced Features
+
+**Time-series tracking:**
+- Add `analyzedWeek` or `analyzedMonth` field
+- Create time-series visualization component
+- Track sentiment changes over time
+
+**Topic clustering:**
+- Extract themes into separate collection
+- Use embeddings for semantic clustering
+- Create theme relationship graphs
+
+**Export functionality:**
+- Add CSV export for Excel analysis
+- Generate PDF reports with charts
+- Create shareable public dashboards
+
+**Automation:**
+- Add cron jobs for scheduled runs
+- Implement webhook notifications
+- Create digest email summaries
+
+### Performance Optimization
+
+**Batch processing:**
+- Current: 500 comments per run
+- Consider: Parallel processing with multiple API keys
+- Rate limiting: Respect API constraints
+
+**Caching:**
+- Cache Reddit posts to avoid re-fetching
+- Store intermediate analysis results
+- Implement incremental updates
+
+**Database migration:**
+- Current: JSONL files (simple, version-controlled)
+- Consider: SQLite for complex queries
+- Alternative: PostgreSQL for production scale
 
 ---
 
-## Notes
+## Implementation Notes
 
-- Subreddit list preserved in `src/scrape.ts:20-22` for reference
-- Google discovery script archived as `src/discover-google.ts` (kept for reference)
-- Main discovery now uses `src/discover-reddit.ts`
+### File References
+
+- Subreddit list: `src/discover-reddit.ts:15-20`
+- Batch size configuration: `src/analyze.ts:16`
+- Dashboard filters: `dashboard/app/page.tsx:700-760`
+- Analysis prompt: `src/analyze.ts:124-159`
+
+### Archived Code
+
+- Google discovery script: `src/discover-google.ts` (kept for reference)
+- Contains working implementation of Google Custom Search API
+- Demonstrates API limitations encountered
+
+### Data Migration
+
+When updating comparison categories or schema:
+1. Keep old analysis files as backup
+2. Document breaking changes in commit messages
+3. Consider writing migration scripts for large datasets
+4. Dashboard handles missing fields gracefully
+
+---
+
+## Contributing
+
+See [README.md](README.md) for contribution guidelines.
+
+For questions or discussions, open an issue on GitHub.
