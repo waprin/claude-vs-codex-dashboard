@@ -79,14 +79,6 @@ export default function Dashboard() {
       });
   }, []);
 
-  // Helper: Map comparison to preference for filtering
-  const getPreference = (comparison: string): 'claude_code' | 'codex' | 'neutral' | 'unclear' => {
-    if (comparison === 'codex_better' || comparison === 'codex_only_positive' || comparison === 'codex_only_negative') return 'codex';
-    if (comparison === 'claude_code_better' || comparison === 'claude_code_only_positive' || comparison === 'claude_code_only_negative') return 'claude_code';
-    if (comparison === 'equal') return 'neutral';
-    return 'unclear'; // off_topic, neither, etc.
-  };
-
   // Toggle ignored status for comment
   const toggleIgnored = (commentId: string) => {
     setIgnoredComments(prev => {
@@ -351,7 +343,7 @@ export default function Dashboard() {
                   ? `${total} total comments analyzed`
                   : `${total} comments from r/${subredditFilter}`}
                 {themeFilter !== 'all' && (
-                  <span className="text-indigo-600 font-medium"> discussing "{themeFilter}"</span>
+                  <span className="text-indigo-600 font-medium"> discussing &quot;{themeFilter}&quot;</span>
                 )}
               </p>
             </div>
@@ -529,7 +521,7 @@ export default function Dashboard() {
                 ? `${(claudeCodeUpvotes + codexUpvotes).toLocaleString()} total upvotes on comments expressing clear preference`
                 : `${totalLabeled} comments expressing clear preference (excluding ${neutral + unclear} neutral/unclear)`}
               {themeFilter !== 'all' && (
-                <span className="text-indigo-600 font-medium"> discussing "{themeFilter}"</span>
+                <span className="text-indigo-600 font-medium"> discussing &quot;{themeFilter}&quot;</span>
               )}
             </p>
           </div>
@@ -607,7 +599,7 @@ export default function Dashboard() {
             <p className="text-sm text-gray-600">
               {totalUpvotes.toLocaleString()} total upvotes across all comments
               {themeFilter !== 'all' && (
-                <span className="text-indigo-600 font-medium"> discussing "{themeFilter}"</span>
+                <span className="text-indigo-600 font-medium"> discussing &quot;{themeFilter}&quot;</span>
               )}
             </p>
           </div>
@@ -901,7 +893,7 @@ export default function Dashboard() {
 
               {result.quote && (
                 <blockquote className="border-l-4 border-purple-500 pl-4 py-2 mb-3 italic text-gray-700">
-                  "{result.quote}"
+                  &quot;{result.quote}&quot;
                 </blockquote>
               )}
 
