@@ -2,3 +2,4 @@
 {"timestamp":1760476743184,"model":"claude-3-5-haiku-20241022","totalCandidates":3686,"alreadyAnalyzed":50,"analyzedThisRun":199,"errors":1,"timeSeconds":639,"inputTokens":90171,"outputTokens":39800,"estimatedCost":0.289171,"batchSize":200}
 {"timestamp":1760479265271,"model":"claude-3-5-haiku-20241022","totalCandidates":3686,"alreadyAnalyzed":249,"analyzedThisRun":499,"errors":1,"timeSeconds":1566,"inputTokens":251461,"outputTokens":99800,"estimatedCost":0.750461,"batchSize":500}
 {"timestamp":1760480107812,"model":"claude-3-5-haiku-20241022","totalCandidates":3379,"alreadyAnalyzed":0,"analyzedThisRun":100,"errors":0,"timeSeconds":349,"inputTokens":48437,"outputTokens":20000,"estimatedCost":0.148437,"batchSize":100}
+{"timestamp":1760491337456,"model":"claude-3-5-haiku-20241022","totalCandidates":3686,"alreadyAnalyzed":100,"analyzedThisRun":500,"errors":0,"timeSeconds":1608,"inputTokens":273282,"outputTokens":100000,"estimatedCost":0.773282,"batchSize":500}

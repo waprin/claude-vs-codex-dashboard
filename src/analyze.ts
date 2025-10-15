@@ -56,7 +56,9 @@ interface SentimentResult {
   postId: string;
   subreddit: string;
   permalink: string;
-  preference: 'claude_code' | 'codex' | 'neutral' | 'unclear';
+  comparison: 'codex_better' | 'claude_code_better' | 'equal' | 'neither' | 'off_topic'
+    | 'claude_code_only_positive' | 'claude_code_only_negative'
+    | 'codex_only_positive' | 'codex_only_negative';
   claudeCodeSentiment: 'positive' | 'negative' | 'neutral' | 'n/a';
   codexSentiment: 'positive' | 'negative' | 'neutral' | 'n/a';
   reasoning: string;
@@ -127,7 +129,17 @@ ${context.fullText}
 
 Based on this discussion thread, analyze the LAST comment's sentiment toward Claude Code vs Codex:
 
-1. **Preference**: Which tool does the author prefer? (claude_code, codex, neutral, or unclear)
+1. **Comparison**: How does the comment compare the two tools?
+   - "codex_better": Direct comparison where Codex is preferred over Claude Code
+   - "claude_code_better": Direct comparison where Claude Code is preferred over Codex
+   - "equal": Rates both tools equally
+   - "neither": Discusses neither tool favorably
+   - "off_topic": Not actually comparing the tools (e.g., discussing other tools like GLM, Cursor, etc.)
+   - "claude_code_only_positive": Only discusses Claude Code with positive sentiment
+   - "claude_code_only_negative": Only discusses Claude Code with negative sentiment
+   - "codex_only_positive": Only discusses Codex with positive sentiment
+   - "codex_only_negative": Only discusses Codex with negative sentiment
+
 2. **Claude Code Sentiment**: positive, negative, neutral, or n/a (if not discussed)
 3. **Codex Sentiment**: positive, negative, neutral, or n/a (if not discussed)
 4. **Reasoning**: Brief explanation (1-2 sentences)
@@ -137,7 +149,7 @@ Based on this discussion thread, analyze the LAST comment's sentiment toward Cla
 
 Respond in JSON format:
 {
-  "preference": "claude_code" | "codex" | "neutral" | "unclear",
+  "comparison": "codex_better" | "claude_code_better" | "equal" | "neither" | "off_topic" | "claude_code_only_positive" | "claude_code_only_negative" | "codex_only_positive" | "codex_only_negative",
   "claudeCodeSentiment": "positive" | "negative" | "neutral" | "n/a",
   "codexSentiment": "positive" | "negative" | "neutral" | "n/a",
   "reasoning": "...",
@@ -180,7 +192,7 @@ Respond in JSON format:
     postId: post.postId,
     subreddit: post.subreddit,
     permalink: `${post.permalink}${comment.id}`,
-    preference: analysis.preference,
+    comparison: analysis.comparison,
     claudeCodeSentiment: analysis.claudeCodeSentiment,
     codexSentiment: analysis.codexSentiment,
     reasoning: analysis.reasoning,

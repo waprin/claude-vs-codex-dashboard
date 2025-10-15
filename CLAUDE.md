@@ -178,11 +178,81 @@ Focus on 3 coding-specific subreddits:
 {"postId":"abc123","subreddit":"ClaudeCode","title":"...","selftext":"...","score":42,"url":"...","permalink":"...","author":"...","created":1697123456,"numComments":50,"comments":[{"id":"def456","text":"...","score":10,"author":"...","created":1697123457}]}
 ```
 
+**sentiment_analysis.jsonl** (one JSON object per line):
+```json
+{"commentId":"abc123","postId":"xyz789","subreddit":"ClaudeCode","permalink":"...","comparison":"codex_better","claudeCodeSentiment":"negative","codexSentiment":"positive","reasoning":"...","themes":["performance","bugs"],"quoteWorthy":true,"quote":"...","score":42,"model":"claude-3-5-haiku-20241022","analyzedAt":1697123456789}
+```
+
+**Comparison field values:**
+- `claude_code_better` - Direct comparison favoring Claude Code over Codex 🏆
+- `codex_better` - Direct comparison favoring Codex over Claude Code 🏆
+- `equal` - Both tools rated equally ⚖️
+- `claude_code_only_positive` - Only discusses Claude Code positively 👍📘
+- `claude_code_only_negative` - Only discusses Claude Code negatively 👎📘
+- `codex_only_positive` - Only discusses Codex positively 👍📗
+- `codex_only_negative` - Only discusses Codex negatively 👎📗
+- `neither` - Discussing neither tool favorably ❌
+- `off_topic` - Not actually comparing the tools (e.g., GLM, Cursor) ⚠️
+
+**Why positive/negative split for *_only:**
+- Comments like "Claude Code has been buggy lately" don't compare to Codex but are negative
+- Comments like "Codex is amazing for Python" don't compare to Claude Code but are positive
+- This distinction matters for understanding overall sentiment per tool
+
+**Dashboard visualization:**
+- Main breakdown shows all 9 categories with counts and percentages
+- "Among Clear Preference" section shows head-to-head (claude_code_better vs codex_better only)
+- Single-tool comments grouped with border colors (green for positive, red for negative)
+- Each comment card displays comparison category with color-coded badge
+- Off-topic comments can be ignored in admin mode to clean up analysis
+
 ### Benefits of JSONL Format
 - Append-only (incremental updates)
 - Easy deduplication (read once, check IDs)
 - Works with streaming processors
 - Git-friendly (line-based diffs)
+
+### Dashboard Architecture (Next.js)
+
+**Local-only architecture:**
+- Dashboard is a Next.js app in `/dashboard` directory
+- Reads `sentiment_analysis.jsonl` from `/dashboard/public/` directory
+- NO DATABASE - All data stored in local JSONL files
+- NO FIREBASE - Firebase MCP is available in the project but NOT used for this app
+- Stats calculated client-side in React
+- Ignored comments tracked in browser localStorage
+
+**Data Flow:**
+```
+src/analyze.ts
+  ↓
+  Writes to: sentiment_analysis.jsonl (root dir)
+  ↓
+  Copies to: dashboard/public/sentiment_analysis.jsonl
+  ↓
+  Dashboard fetches from: /sentiment_analysis.jsonl (public static file)
+  ↓
+  React state + localStorage for UI interactions
+```
+
+**Why local-only:**
+- Simple deployment (no backend needed)
+- Fast iteration (no DB schema changes)
+- Version controlled (JSONL in git)
+- Zero infra cost
+
+**Admin Mode (localhost only):**
+- Automatically enabled when `window.location.hostname === 'localhost'`
+- Shows ignore controls for filtering out irrelevant comments
+- Two ignore options:
+  1. **Ignore Comment**: Excludes single comment from stats
+  2. **Ignore Thread**: Excludes all comments in that Reddit post from stats
+- Ignored state persists in browser localStorage
+- Production deployment automatically hides admin controls
+- Use cases:
+  - Filter out off-topic discussions (e.g., GLM, Cursor, other tools)
+  - Remove spam or low-quality comments
+  - Clean up dataset without modifying JSONL files
 
 ---
 
