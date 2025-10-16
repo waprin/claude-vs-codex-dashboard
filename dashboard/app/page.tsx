@@ -42,31 +42,22 @@ export default function Dashboard() {
     setAdminMode(isLocal);
   }, []);
 
-  // Load ignored comments from localStorage on mount
+  // Load ignored comments from file (single source of truth)
   useEffect(() => {
-    const storedComments = localStorage.getItem('ignoredComments');
-    if (storedComments) {
-      setIgnoredComments(new Set(JSON.parse(storedComments)));
-    }
-    const storedThreads = localStorage.getItem('ignoredThreads');
-    if (storedThreads) {
-      setIgnoredThreads(new Set(JSON.parse(storedThreads)));
-    }
+    fetch('/ignored_comments.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ignoredComments && Array.isArray(data.ignoredComments)) {
+          setIgnoredComments(new Set(data.ignoredComments));
+        }
+        if (data.ignoredThreads && Array.isArray(data.ignoredThreads)) {
+          setIgnoredThreads(new Set(data.ignoredThreads));
+        }
+      })
+      .catch(err => {
+        console.warn('Could not load ignored_comments.json:', err);
+      });
   }, []);
-
-  // Save ignored comments to localStorage when changed
-  useEffect(() => {
-    if (ignoredComments.size > 0) {
-      localStorage.setItem('ignoredComments', JSON.stringify(Array.from(ignoredComments)));
-    }
-  }, [ignoredComments]);
-
-  // Save ignored threads to localStorage when changed
-  useEffect(() => {
-    if (ignoredThreads.size > 0) {
-      localStorage.setItem('ignoredThreads', JSON.stringify(Array.from(ignoredThreads)));
-    }
-  }, [ignoredThreads]);
 
   useEffect(() => {
     fetch('/sentiment_analysis.jsonl')
@@ -103,6 +94,26 @@ export default function Dashboard() {
       }
       return next;
     });
+  };
+
+  // Export ignored lists to JSON file for production deployment
+  const exportIgnoredList = () => {
+    const exportData = {
+      ignoredComments: Array.from(ignoredComments),
+      ignoredThreads: Array.from(ignoredThreads),
+      lastUpdated: new Date().toISOString(),
+      notes: "This file contains comment IDs and thread IDs that should be filtered out in production. To update: 1) Run dashboard locally (admin mode), 2) Mark comments/threads as ignored, 3) Click Export button, 4) Replace dashboard/public/ignored_comments.json with downloaded file, 5) Deploy"
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'ignored_comments.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -257,9 +268,9 @@ export default function Dashboard() {
               )}
             </p>
             {adminMode && (
-              <p className="text-xs text-purple-600 mt-1">
-                🔧 Admin Mode: Running locally
-              </p>
+              <div className="text-xs text-purple-600 mt-1">
+                🔧 Admin Mode: Running locally - Changes are session-only until exported
+              </div>
             )}
           </div>
           {adminMode && (
@@ -270,6 +281,14 @@ export default function Dashboard() {
                 title={showIgnored ? 'Hide ignored comments' : 'Show ignored comments'}
               >
                 {showIgnored ? '👁️ Showing Ignored' : '👁️‍🗨️ Hiding Ignored'} ({ignoredComments.size + ignoredThreads.size})
+              </button>
+              <button
+                onClick={exportIgnoredList}
+                className="px-4 py-2 rounded text-sm bg-green-600 text-white hover:bg-green-700"
+                title="Export current ignore list to JSON file - replace dashboard/public/ignored_comments.json and deploy"
+                disabled={ignoredComments.size === 0 && ignoredThreads.size === 0}
+              >
+                📥 Export for Production ({ignoredComments.size + ignoredThreads.size})
               </button>
             </div>
           )}

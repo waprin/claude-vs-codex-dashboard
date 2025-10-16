@@ -1,0 +1,8 @@
+{
+  "ignoredComments": [
+    "ni1k50k"
+  ],
+  "ignoredThreads": [],
+  "lastUpdated": "2025-10-16T16:55:16.370Z",
+  "notes": "This file contains comment IDs and thread IDs that should be filtered out in production. To update: 1) Run dashboard locally (admin mode), 2) Mark comments/threads as ignored, 3) Click Export button, 4) Replace dashboard/public/ignored_comments.json with downloaded file, 5) Deploy"
+}

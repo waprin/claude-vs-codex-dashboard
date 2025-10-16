@@ -4,5 +4,6 @@ dist/
 *.json
 !package.json
 !tsconfig.json
+!dashboard/public/ignored_comments.json
 logs/
 NOTES.md
