@@ -656,66 +656,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Weighted Stats (by upvotes) */}
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold">Weighted by Upvotes</h2>
-            <p className="text-sm text-gray-600">
-              {totalUpvotes.toLocaleString()} total upvotes across all comments
-              {themeFilter !== 'all' && (
-                <span className="text-indigo-600 font-medium"> discussing &quot;{themeFilter}&quot;</span>
-              )}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-              <div className="text-4xl font-bold text-blue-600">{totalUpvotes > 0 ? ((claudeCodeUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%</div>
-              <div className="text-sm font-medium text-gray-700">Claude Code upvotes</div>
-              <div className="text-xs text-gray-500">{claudeCodeUpvotes.toLocaleString()} upvotes</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-green-600">{totalUpvotes > 0 ? ((codexUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%</div>
-              <div className="text-sm font-medium text-gray-700">Codex upvotes</div>
-              <div className="text-xs text-gray-500">{codexUpvotes.toLocaleString()} upvotes</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-gray-600">{totalUpvotes > 0 ? ((neutralUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%</div>
-              <div className="text-sm font-medium text-gray-700">Neutral upvotes</div>
-              <div className="text-xs text-gray-500">{neutralUpvotes.toLocaleString()} upvotes</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-gray-400">{totalUpvotes > 0 ? ((unclearUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%</div>
-              <div className="text-sm font-medium text-gray-700">Unclear upvotes</div>
-              <div className="text-xs text-gray-500">{unclearUpvotes.toLocaleString()} upvotes</div>
-            </div>
-          </div>
-
-          {/* Visual bar */}
-          <div className="mt-4 h-3 flex rounded-full overflow-hidden">
-            <div
-              className="bg-blue-600"
-              style={{width: `${totalUpvotes > 0 ? (claudeCodeUpvotes / totalUpvotes) * 100 : 0}%`}}
-              title={`Claude Code: ${totalUpvotes > 0 ? ((claudeCodeUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%`}
-            />
-            <div
-              className="bg-green-600"
-              style={{width: `${totalUpvotes > 0 ? (codexUpvotes / totalUpvotes) * 100 : 0}%`}}
-              title={`Codex: ${totalUpvotes > 0 ? ((codexUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%`}
-            />
-            <div
-              className="bg-gray-600"
-              style={{width: `${totalUpvotes > 0 ? (neutralUpvotes / totalUpvotes) * 100 : 0}%`}}
-              title={`Neutral: ${totalUpvotes > 0 ? ((neutralUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%`}
-            />
-            <div
-              className="bg-gray-400"
-              style={{width: `${totalUpvotes > 0 ? (unclearUpvotes / totalUpvotes) * 100 : 0}%`}}
-              title={`Unclear: ${totalUpvotes > 0 ? ((unclearUpvotes / totalUpvotes) * 100).toFixed(1) : 0}%`}
-            />
-          </div>
-        </div>
-
         {/* Models Used */}
         {models.length > 1 && (
           <div className="bg-white p-6 rounded-lg shadow mb-8">
