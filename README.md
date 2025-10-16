@@ -2,6 +2,8 @@
 
 A TypeScript-based tool for analyzing Reddit discussions comparing AI coding tools, with a focus on Claude Code vs Codex. Uses AI-powered sentiment analysis to identify trends, themes, and developer opinions.
 
+**🔗 [View Live Dashboard](https://claude-vs-codex-dashboard.vercel.app/)**
+
 ## Features
 
 - **Reddit Discovery**: Automatically finds relevant discussions across multiple subreddits

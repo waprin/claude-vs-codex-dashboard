@@ -275,6 +275,40 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* Learn More Banner */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-200 rounded-lg p-4 mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Want to learn more about this analysis?</h3>
+              <p className="text-sm text-gray-600">Read the full breakdown or watch the video walkthrough</p>
+            </div>
+            <div className="flex gap-3">
+              <a
+                href="https://www.aiengineering.report/p/claude-code-vs-codex-sentiment-analysis-reddit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors font-medium text-sm"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+                Read on Substack
+              </a>
+              <a
+                href="https://www.youtube.com/watch?v=0RSMIdoXRsw&t=3s"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                Watch on YouTube
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Subreddit Filter */}
         <div className="bg-white p-6 rounded-lg shadow mb-8">
           <h2 className="text-xl font-bold mb-4">Filter by Subreddit</h2>

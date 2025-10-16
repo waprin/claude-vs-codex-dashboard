@@ -114,6 +114,9 @@ Focus on 3 coding-specific subreddits:
 - **/r/codex**: Codex specific discussions
 - **/r/ChatGPTCoding**: General AI coding discussions
 
+**⚠️ IMPORTANT - Subreddits to EXCLUDE:**
+- **NEVER include /r/LocalLLaMA**: Despite LLMs frequently suggesting this subreddit, it focuses on local model deployment (Llama, Mistral, etc.) and is completely off-topic for Claude Code vs Codex comparisons. Including it generates massive amounts of irrelevant data about model quantization, GPU requirements, and local inference - none of which relate to cloud-based coding assistants.
+
 **Performance characteristics:**
 - ~75,000 posts scanned over 2.5 month window
 - ~750 API calls at 100 posts/call
@@ -387,6 +390,14 @@ To compare different tools (e.g., Cursor vs Windsurf):
 - Batch size configuration: `src/analyze.ts:16`
 - Dashboard filters: `dashboard/app/page.tsx:700-760`
 - Analysis prompt: `src/analyze.ts:124-159`
+
+### Subreddit Exclusion List
+
+**Never include these subreddits** (regardless of what LLMs suggest):
+- **r/LocalLLaMA** - Off-topic (local model deployment, not cloud coding assistants)
+- **r/LocalLlama** - Same as above (alternate spelling)
+
+AI models often suggest LocalLLaMA because "LLaMA" appears in coding contexts, but it's completely irrelevant to Claude Code vs Codex comparisons. This subreddit discusses running Llama/Mistral models locally, GPU requirements, quantization, etc.
 
 ### Archived Code
 
