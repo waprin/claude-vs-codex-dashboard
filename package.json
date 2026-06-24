@@ -7,10 +7,20 @@
   "scripts": {
     "discover": "tsx src/discover-reddit.ts",
     "discover:google": "tsx src/discover-google.ts",
+    "discover:blogs": "tsx src/discover-blogs.ts",
+    "discover:tips": "tsx src/discover-tips.ts",
+    "discover:tips:v2": "tsx src/discover-tips-v2.ts",
+    "extract:tips": "tsx src/extract-tips.ts",
+    "fetch:tips": "tsx src/fetch-top-tips.ts",
     "scrape": "tsx src/scrape.ts",
+    "scrape:blogs": "tsx src/scrape-blogs.ts",
+    "scrape:tips": "tsx src/scrape-tips.ts",
+    "scrape:twitter": "tsx src/scrape-twitter.ts",
+    "analyze:tips": "tsx src/analyze-tips.ts",
     "filter-clean": "tsx src/filter-clean-dataset.ts",
     "analyze": "tsx src/analyze.ts",
-    "dashboard": "cd dashboard && npm run dev"
+    "dashboard": "cd dashboard && npm run dev",
+    "export": "tsx src/export-to-lifesystem.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
