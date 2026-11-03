@@ -1,16 +1,10 @@
-import Snoowrap from 'snoowrap';
+import { createRedditClient } from './reddit-client.js';
 import { readFileSync, existsSync } from 'fs';
 import { config } from 'dotenv';
 
 config();
 
-const reddit = new Snoowrap({
-  userAgent: process.env.REDDIT_USER_AGENT || 'lois-content-research/1.0.0',
-  clientId: process.env.REDDIT_CLIENT_ID!,
-  clientSecret: process.env.REDDIT_CLIENT_SECRET!,
-  username: process.env.REDDIT_USERNAME!,
-  password: process.env.REDDIT_PASSWORD!,
-});
+const reddit = await createRedditClient();
 
 const INPUT_FILE = 'claude_code_tips.jsonl';
 

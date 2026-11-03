@@ -4,6 +4,23 @@ A TypeScript-based tool for analyzing Reddit discussions comparing AI coding too
 
 **🔗 [View Live Dashboard](https://claude-vs-codex-dashboard.vercel.app/)**
 
+## Project Status
+
+This repo contains several pipelines that grew out of the original sentiment-analysis work. Not all of them are equally maintained. Here is the current state as of November 2026:
+
+| Pipeline | Status | Entry points | Output |
+|---|---|---|---|
+| **Sentiment analysis** (Claude Code vs Codex) | Active, powers the live dashboard | `discover`, `scrape`, `analyze`, `dashboard` | `sentiment_analysis.jsonl` |
+| **Claude Code tips, v2** | Active, current approach | `discover:tips:v2`, `scrape:tips`, `analyze:tips` | `extracted_tips.jsonl` |
+| **Claude Code tips, v1** | Deprecated, superseded by v2 | `discover:tips`, `fetch:tips`, `extract:tips` | `claude_code_tips.jsonl` |
+| **Anthropic blog scraper** | Side experiment | `discover:blogs`, `scrape:blogs`, `export` | `blog_data.jsonl` |
+| **Twitter metrics** | Side experiment | `scrape:twitter` | `twitter_data.jsonl` |
+| **Google discovery** | Archived, kept for reference | `discover:google` | n/a |
+
+All Reddit-facing scripts share one client in `src/reddit-client.ts`, which authenticates with the client-credentials grant. Only a client ID and secret are needed; no Reddit username or password.
+
+Everything is local-only: no database, all data lives in append-only JSONL files at the repo root, and the dashboard reads a copy of `sentiment_analysis.jsonl` from `dashboard/public/`.
+
 ## Features
 
 - **Reddit Discovery**: Automatically finds relevant discussions across multiple subreddits
@@ -15,7 +32,7 @@ A TypeScript-based tool for analyzing Reddit discussions comparing AI coding too
 
 ## Architecture
 
-### Pipeline Overview
+### Sentiment Pipeline Overview
 
 ```
 1. Discovery (src/discover-reddit.ts)
@@ -25,12 +42,13 @@ A TypeScript-based tool for analyzing Reddit discussions comparing AI coding too
 
 2. Scraping (src/scrape.ts)
    → Read discovered URLs
-   → Fetch full posts + comments
+   → Fetch full posts + comments (with parentId and depth per comment)
    → Save to reddit_data.jsonl
 
 3. Analysis (src/analyze.ts)
    → Read reddit data
-   → AI sentiment analysis via Claude
+   → For each comment, build context from the post plus its ancestor comment chain
+   → AI sentiment analysis via Claude on the last comment in that chain
    → Save to sentiment_analysis.jsonl
 
 4. Dashboard (dashboard/)
@@ -42,7 +60,7 @@ A TypeScript-based tool for analyzing Reddit discussions comparing AI coding too
 ### Tech Stack
 
 - **Language**: TypeScript
-- **Reddit API**: Snoowrap
+- **Reddit API**: Snoowrap (via `src/reddit-client.ts`)
 - **AI Analysis**: Anthropic Claude API
 - **Dashboard**: Next.js + React
 - **Data Format**: JSONL (JSON Lines)
@@ -52,8 +70,9 @@ A TypeScript-based tool for analyzing Reddit discussions comparing AI coding too
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Reddit API credentials (client ID, client secret, username, password)
+- Reddit API credentials (client ID and client secret from a Reddit "script" app; no username/password needed)
 - Anthropic API key
+- Optional: Google Custom Search key and engine ID (only used by the tips v2 discovery step)
 
 ### Setup
 
@@ -79,16 +98,18 @@ Edit `.env` and add your credentials:
 # Reddit API
 REDDIT_CLIENT_ID=your_client_id
 REDDIT_CLIENT_SECRET=your_client_secret
-REDDIT_USERNAME=your_username
-REDDIT_PASSWORD=your_password
 REDDIT_USER_AGENT=lois-content-research/1.0.0
+
+# Optional: Google Custom Search (tips v2 discovery only)
+GOOGLE_CUSTOM_SEARCH_KEY=your_google_api_key
+GOOGLE_CUSTOM_SEARCH_CX=your_search_engine_id
 
 # Anthropic API
 ANTHROPIC_API_KEY=your_api_key
 ANALYSIS_MODEL=claude-3-5-haiku-20241022
 ```
 
-## Usage
+## Usage: Sentiment Pipeline
 
 ### 1. Discover Reddit Posts
 
@@ -142,6 +163,76 @@ Open [http://localhost:3000](http://localhost:3000) to explore:
 - Toggle upvote weighting
 - Admin mode (localhost only) for curating data
 
+### Optional: Clean Dataset
+
+`npm run filter-clean` writes `reddit_data_clean.jsonl`, which keeps only posts discovered via the Reddit API and drops any that came from the archived Google discovery experiment.
+
+## Usage: Claude Code Tips Pipeline
+
+A second pipeline that mines r/ClaudeCode for practical tips and tricks rather than comparative sentiment. There are two versions. **Use v2.** v1 is kept only because its data file still exists; it is slated for removal.
+
+### v2 (current)
+
+```
+1. Discovery (src/discover-tips-v2.ts)         npm run discover:tips:v2
+   → Paginate r/ClaudeCode getNew() and getTop() (up to 1,000 posts each)
+   → Optionally add Google Custom Search results for feature-specific queries
+     (hooks, MCP, subagents, CLAUDE.md, plan mode, etc.)
+   → Dedupe, no content filtering
+   → Save to discovered_tip_posts.jsonl
+
+2. Scraping (src/scrape-tips.ts)               npm run scrape:tips
+   → Fetch each post and its full comment tree
+   → Every comment carries parentId and depth
+   → Save to tip_posts_full.jsonl
+
+3. Extraction (src/analyze-tips.ts)            npm run analyze:tips
+   → One prompt per post: post body plus top 30 comments by score
+   → Claude extracts tips with category, advanced flag, and source comment
+   → One line per tip, resumable across runs
+   → Save to extracted_tips.jsonl
+```
+
+### v1 (deprecated)
+
+```
+1. Discovery (src/discover-tips.ts)            npm run discover:tips
+   → Fetch small listings from r/ClaudeCode (top/hot/new plus keyword searches)
+   → Score each post with a keyword and engagement heuristic
+   → Keep only posts that look like tips
+   → Save to claude_code_tips.jsonl
+
+2. Extraction (src/extract-tips.ts)            npm run extract:tips
+   → Take top 50 posts by heuristic score
+   → Fetch only the single highest-scored comment per post
+   → Claude extracts tips
+   → Save to extracted_tips.jsonl (one line per post, nested tips array)
+
+Helpers:
+   src/fetch-top-tips.ts     npm run fetch:tips    → top_tips_content.jsonl
+   src/analyze-tip-volume.ts                       → cost estimate, no output file
+```
+
+### Relationship between v1 and v2
+
+- They are independent chains. They share only the Reddit client and the final output filename.
+- **Where filtering happens.** v1 filters at discovery with a keyword heuristic. v2 collects everything and lets the LLM decide what is a tip.
+- **Comment coverage.** v1 reads one comment per post. v2 scrapes the whole thread and feeds the top 30 comments into the prompt.
+- **Resumability.** v1 extraction re-processes the same posts on every run. v2 tracks analyzed post IDs and skips them.
+- **Output schema.** Both write to `extracted_tips.jsonl`, but with incompatible shapes. v1 writes one record per post with a nested `tips[]` array. v2 writes one flat record per tip with `sourcePostId`, `sourceCommentId`, and `sourceCommentScore`. The file currently on disk is in v2 shape. **Do not run v1 extraction against it** or the schemas will mix.
+
+### Known gap in v2
+
+The sentiment pipeline already builds per-comment context by walking each comment's ancestor chain up to the post (see `getThreadContext` in `src/analyze.ts`). The tips extractor does not yet use that structure: it flattens comments into a score-sorted list, so replies lose the comment they were responding to, and slicing by score can orphan replies whose parents fell below the cutoff. The scraped data already has everything needed to fix this. The planned direction is to move the context builder into a shared module and have the tips extractor render comments as a pruned thread tree.
+
+## Side Experiments
+
+These are not part of the main pipelines and may be rough.
+
+- **Anthropic blog scraper.** `npm run discover:blogs` writes `discovered_blog_urls.jsonl`, `npm run scrape:blogs` writes `blog_data.jsonl`, and `npm run export` converts blog data into markdown files for an external notes system.
+- **Twitter metrics.** `npm run scrape:twitter` pulls recent tweets and engagement metrics for a user via the Twitter API v2 into `twitter_data.jsonl`.
+- **Google discovery.** `src/discover-google.ts` is the archived Google Custom Search approach. It is kept to document why it was abandoned (100-result cap per query). See [CLAUDE.md](CLAUDE.md) for the full story.
+
 ## Data Format
 
 ### Comparison Categories
@@ -160,12 +251,27 @@ The analysis classifies each comment into one of 9 categories:
 
 ### JSONL Files
 
-All data is stored in append-only JSONL format:
+All data is stored in append-only JSONL format.
+
+Sentiment pipeline:
 - `discovered_urls.jsonl`: Reddit URLs to scrape
 - `reddit_data.jsonl`: Full posts with comments
 - `reddit_data_clean.jsonl`: Filtered version (optional)
 - `sentiment_analysis.jsonl`: AI analysis results
 - `logs/runs.jsonl`: Analysis run metadata
+
+Tips pipeline (v2):
+- `discovered_tip_posts.jsonl`: Post IDs and URLs from Reddit and Google
+- `tip_posts_full.jsonl`: Full posts with threaded comments
+- `extracted_tips.jsonl`: One line per extracted tip
+
+Tips pipeline (v1, deprecated):
+- `claude_code_tips.jsonl`: Heuristically filtered posts
+- `top_tips_content.jsonl`: Posts with top comments
+
+Side experiments:
+- `discovered_blog_urls.jsonl`, `blog_data.jsonl`: Anthropic blog content
+- `twitter_data.jsonl`: Tweet metrics
 
 See [CLAUDE.md](CLAUDE.md) for detailed schema documentation.
 
@@ -215,6 +321,8 @@ See [NOTES.md](NOTES.md) for project planning and personal notes.
 
 Contributions welcome! Areas for improvement:
 
+- Remove the deprecated v1 tips pipeline
+- Thread-aware context for tips extraction (see "Known gap in v2" above)
 - Additional AI tool comparisons (Cursor, Windsurf, etc.)
 - Multi-platform support (Hacker News, Twitter, etc.)
 - Advanced visualizations

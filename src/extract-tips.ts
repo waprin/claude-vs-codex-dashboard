@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { config } from 'dotenv';
-import Snoowrap from 'snoowrap';
+import { createRedditClient } from './reddit-client.js';
 
 config();
 
@@ -9,13 +9,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
-const reddit = new Snoowrap({
-  userAgent: process.env.REDDIT_USER_AGENT || 'lois-content-research/1.0.0',
-  clientId: process.env.REDDIT_CLIENT_ID!,
-  clientSecret: process.env.REDDIT_CLIENT_SECRET!,
-  username: process.env.REDDIT_USERNAME!,
-  password: process.env.REDDIT_PASSWORD!,
-});
+const reddit = await createRedditClient();
 
 const INPUT_FILE = 'claude_code_tips.jsonl';
 const OUTPUT_FILE = 'extracted_tips.jsonl';
